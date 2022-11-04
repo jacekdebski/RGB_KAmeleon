@@ -36,7 +36,11 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+#define MAX_BRIGHTNESS 19 // check if it is correct value
+#define MIN_BRIGHTNESS 2 // check if it is correct value
+#define MAX_DELAY_COUNTER 200
+#define MAX_COLOR_LED 7
+#define MIN_COLOR_LED 0
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -180,14 +184,109 @@ void PendSV_Handler(void)
 /**
   * @brief This function handles System tick timer.
   */
+
 void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
-
+	static uint16_t counter = 0;
+	static uint16_t delay_counter = 0;
+	static uint8_t color_led = MAX_COLOR_LED;
+	static uint8_t brightness_led = MIN_BRIGHTNESS;
   /* USER CODE END SysTick_IRQn 0 */
-  HAL_IncTick();
+	HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
+  	if(delay_counter == MAX_DELAY_COUNTER)
+  	{
+  		//change led by right button
+  		if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_0) == GPIO_PIN_RESET)
+  		{
+  			if(color_led == MAX_COLOR_LED){
+  				color_led = MIN_COLOR_LED;
+  			}
+  			else
+  			{
+  				color_led++;
+  			}
+  		}
+  		//change led by right button
+  		if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_1) == GPIO_PIN_RESET)
+  		{
+  			if(color_led == MIN_COLOR_LED){
+  				color_led = MAX_COLOR_LED;
+  			}
+  			else
+  			{
+  				color_led--;
+  			}
+  		}
+  		//increase brightness led by up button
+  		if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_2) == GPIO_PIN_RESET)
+  		{
+  			if(brightness_led < MAX_BRIGHTNESS){
+  				brightness_led++;
+  			}
+  		}
+  		//decrease brigthness led by down button
+  		if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3) == GPIO_PIN_RESET)
+  		{
+  			if(brightness_led > MIN_BRIGHTNESS){
+  				brightness_led--;
+  			}
+  		}
+  		//set initial value by push button
+  		if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_15) == GPIO_PIN_RESET)
+  		{
+  			color_led = MAX_COLOR_LED;
+  			brightness_led = MAX_BRIGHTNESS;
+  		}
+  		delay_counter = 0;
+  	}
 
+  	//PWM
+	if(counter < brightness_led)
+	{
+			//led 0
+			if((color_led & 1) == 1)
+			{
+				HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_SET);
+			}
+			else
+			{
+				HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_RESET);
+			}
+
+			//led 1
+			if((color_led & 2) == 2)
+			{
+				HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_SET);
+			}
+			else
+			{
+				HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_RESET);
+			}
+
+			//led 2
+			if((color_led & 4) == 4)
+			{
+				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);
+			}
+			else
+			{
+				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_RESET);
+			}
+	}
+	else if (counter >= brightness_led && counter < 20)
+	{
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12 | GPIO_PIN_13, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_8, GPIO_PIN_RESET);
+	}
+	else if (counter == 20)
+	{
+		counter = 0;
+	}
+
+  	counter++;
+  	delay_counter++;
   /* USER CODE END SysTick_IRQn 1 */
 }
 
