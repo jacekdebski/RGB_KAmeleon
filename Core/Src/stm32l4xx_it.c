@@ -22,6 +22,7 @@
 #include "stm32l4xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -192,54 +193,80 @@ void SysTick_Handler(void)
 	static uint16_t delay_counter = 0;
 	static uint8_t color_led = MAX_COLOR_LED;
 	static uint8_t brightness_led = MIN_BRIGHTNESS;
+	static bool is_button_pressed = false;
   /* USER CODE END SysTick_IRQn 0 */
 	HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
-  	if(delay_counter == MAX_DELAY_COUNTER)
+	//if(is_button_pressed == true){
+		if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_0) == GPIO_PIN_SET
+			&& HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_1) == GPIO_PIN_SET
+			&& HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_2) == GPIO_PIN_SET
+			&& HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3) == GPIO_PIN_SET
+			&& HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_15) == GPIO_PIN_SET)
+		{
+				is_button_pressed = false;
+		}
+	//}
+
+
+  	if(is_button_pressed == false)
   	{
-  		//change led by right button
-  		if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_0) == GPIO_PIN_RESET)
+  		for(int i = 0; i < 1; ++i)
   		{
-  			if(color_led == MAX_COLOR_LED){
-  				color_led = MIN_COLOR_LED;
-  			}
-  			else
-  			{
-  				color_led++;
-  			}
+  			//change led by right button
+			if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_0) == GPIO_PIN_RESET)
+			{
+				if(color_led == MAX_COLOR_LED){
+					color_led = MIN_COLOR_LED;
+				}
+				else
+				{
+					color_led++;
+				}
+				is_button_pressed = true;
+				break;
+			}
+			//change led by right button
+			if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_1) == GPIO_PIN_RESET)
+			{
+				if(color_led == MIN_COLOR_LED){
+					color_led = MAX_COLOR_LED;
+				}
+				else
+				{
+					color_led--;
+				}
+				is_button_pressed = true;
+				break;
+			}
+			//increase brightness led by up button
+			if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_2) == GPIO_PIN_RESET)
+			{
+				if(brightness_led < MAX_BRIGHTNESS){
+					brightness_led++;
+				}
+				is_button_pressed = true;
+				break;
+			}
+			//decrease brigthness led by down button
+			if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3) == GPIO_PIN_RESET)
+			{
+				if(brightness_led > MIN_BRIGHTNESS){
+					brightness_led--;
+				}
+				is_button_pressed = true;
+				break;
+			}
+			//set initial value by push button
+			if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_15) == GPIO_PIN_RESET)
+			{
+				color_led = MAX_COLOR_LED;
+				brightness_led = MAX_BRIGHTNESS;
+				is_button_pressed = true;
+				break;
+			}
   		}
-  		//change led by right button
-  		if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_1) == GPIO_PIN_RESET)
-  		{
-  			if(color_led == MIN_COLOR_LED){
-  				color_led = MAX_COLOR_LED;
-  			}
-  			else
-  			{
-  				color_led--;
-  			}
-  		}
-  		//increase brightness led by up button
-  		if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_2) == GPIO_PIN_RESET)
-  		{
-  			if(brightness_led < MAX_BRIGHTNESS){
-  				brightness_led++;
-  			}
-  		}
-  		//decrease brigthness led by down button
-  		if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3) == GPIO_PIN_RESET)
-  		{
-  			if(brightness_led > MIN_BRIGHTNESS){
-  				brightness_led--;
-  			}
-  		}
-  		//set initial value by push button
-  		if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_15) == GPIO_PIN_RESET)
-  		{
-  			color_led = MAX_COLOR_LED;
-  			brightness_led = MAX_BRIGHTNESS;
-  		}
-  		delay_counter = 0;
+  		//delay_counter = 0;
   	}
 
   	//PWM
