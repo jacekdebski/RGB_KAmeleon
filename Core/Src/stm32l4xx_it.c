@@ -37,8 +37,8 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-#define MAX_BRIGHTNESS 19 // check if it is correct value
-#define MIN_BRIGHTNESS 2 // check if it is correct value
+#define MAX_BRIGHTNESS 20 // check if it is correct value
+#define MIN_BRIGHTNESS 0 // check if it is correct value
 #define MAX_DELAY_COUNTER 200
 #define MAX_COLOR_LED 7
 #define MIN_COLOR_LED 0
@@ -190,24 +190,21 @@ void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
 	static uint16_t counter = 0;
-	static uint16_t delay_counter = 0;
 	static uint8_t color_led = MAX_COLOR_LED;
 	static uint8_t brightness_led = MIN_BRIGHTNESS;
 	static bool is_button_pressed = false;
   /* USER CODE END SysTick_IRQn 0 */
 	HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
-	//if(is_button_pressed == true){
-		if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_0) == GPIO_PIN_SET
-			&& HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_1) == GPIO_PIN_SET
-			&& HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_2) == GPIO_PIN_SET
-			&& HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3) == GPIO_PIN_SET
-			&& HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_15) == GPIO_PIN_SET)
-		{
-				is_button_pressed = false;
-		}
-	//}
 
+	if(HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_0) == GPIO_PIN_SET
+		&& HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_1) == GPIO_PIN_SET
+		&& HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_2) == GPIO_PIN_SET
+		&& HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3) == GPIO_PIN_SET
+		&& HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_15) == GPIO_PIN_SET)
+	{
+			is_button_pressed = false;
+	}
 
   	if(is_button_pressed == false)
   	{
@@ -313,7 +310,7 @@ void SysTick_Handler(void)
 	}
 
   	counter++;
-  	delay_counter++;
+
   /* USER CODE END SysTick_IRQn 1 */
 }
 
