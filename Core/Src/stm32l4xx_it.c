@@ -37,9 +37,11 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-#define MAX_BRIGHTNESS 20 // check if it is correct value
-#define MIN_BRIGHTNESS 0 // check if it is correct value
-#define MAX_DELAY_COUNTER 200
+#define PWM_FREQUENCY 50
+#define PWM_PERIOD 1/PWM_FREQUENCY
+#define MAX_COUNTER (uint16_t)PWM_PERIOD/0.001
+#define MAX_BRIGHTNESS 100 //in percentage
+#define MIN_BRIGHTNESS 0 //in percentage
 #define MAX_COLOR_LED 7
 #define MIN_COLOR_LED 0
 /* USER CODE END PM */
@@ -267,7 +269,7 @@ void SysTick_Handler(void)
   	}
 
   	//PWM
-	if(counter < brightness_led)
+	if(counter < (brightness_led * MAX_COUNTER / 100))
 	{
 			//led 0
 			if((color_led & 1) == 1)
@@ -299,12 +301,12 @@ void SysTick_Handler(void)
 				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_RESET);
 			}
 	}
-	else if (counter >= brightness_led && counter < 20)
+	else if (counter >= (brightness_led * MAX_COUNTER / 100) && counter < MAX_COUNTER)
 	{
 		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12 | GPIO_PIN_13, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_8, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_RESET);
 	}
-	else if (counter == 20)
+	else if (counter == MAX_COUNTER)
 	{
 		counter = 0;
 	}
