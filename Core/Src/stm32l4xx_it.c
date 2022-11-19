@@ -42,6 +42,7 @@
 #define MAX_COUNTER (uint16_t)PWM_PERIOD/0.001
 #define MAX_BRIGHTNESS 100 //in percentage
 #define MIN_BRIGHTNESS 0 //in percentage
+#define STEP_IN_SET_BRIGHTNESS 10
 #define MAX_COLOR_LED 7
 #define MIN_COLOR_LED 0
 /* USER CODE END PM */
@@ -236,7 +237,7 @@ void SysTick_Handler(void)
 	if(is_button_pressed == false && HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_2) == GPIO_PIN_RESET)
 	{
 		if(brightness_led < MAX_BRIGHTNESS){
-			brightness_led++;
+			brightness_led += STEP_IN_SET_BRIGHTNESS;
 		}
 		is_button_pressed = true;
 	}
@@ -244,7 +245,7 @@ void SysTick_Handler(void)
 	if(is_button_pressed == false && HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3) == GPIO_PIN_RESET)
 	{
 		if(brightness_led > MIN_BRIGHTNESS){
-			brightness_led--;
+			brightness_led -= STEP_IN_SET_BRIGHTNESS;
 		}
 		is_button_pressed = true;
 	}
