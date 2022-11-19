@@ -38,8 +38,6 @@
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
 #define PWM_FREQUENCY 50
-#define PWM_PERIOD 1/PWM_FREQUENCY
-#define MAX_COUNTER (uint16_t)PWM_PERIOD/0.001
 #define MAX_BRIGHTNESS 100 //in percentage
 #define MIN_BRIGHTNESS 0 //in percentage
 #define STEP_IN_SET_BRIGHTNESS 10
@@ -196,6 +194,10 @@ void SysTick_Handler(void)
 	static uint8_t color_led = MAX_COLOR_LED;
 	static uint8_t brightness_led = MIN_BRIGHTNESS;
 	static bool is_button_pressed = false;
+
+	float pwm_period = (float)1/PWM_FREQUENCY;
+	uint16_t max_counter = (uint16_t)(pwm_period/0.001);
+	uint16_t led_on = (uint16_t)(brightness_led * ((float)max_counter / 100));
   /* USER CODE END SysTick_IRQn 0 */
 	HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
@@ -233,7 +235,7 @@ void SysTick_Handler(void)
 		}
 		is_button_pressed = true;
 	}
-	//increase brightness led by up button
+	//increase brightness led by down button
 	if(is_button_pressed == false && HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_2) == GPIO_PIN_RESET)
 	{
 		if(brightness_led < MAX_BRIGHTNESS){
@@ -241,7 +243,7 @@ void SysTick_Handler(void)
 		}
 		is_button_pressed = true;
 	}
-	//decrease brightness led by down button
+	//decrease brightness led by up button
 	if(is_button_pressed == false && HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3) == GPIO_PIN_RESET)
 	{
 		if(brightness_led > MIN_BRIGHTNESS){
@@ -258,7 +260,7 @@ void SysTick_Handler(void)
 	}
 
   	//PWM
-	if(counter < (brightness_led * MAX_COUNTER / 100))
+	if(counter < led_on)
 	{
 			//led 0
 			if((color_led & 1) == 1)
@@ -290,12 +292,12 @@ void SysTick_Handler(void)
 				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_RESET);
 			}
 	}
-	else if (counter >= (brightness_led * MAX_COUNTER / 100) && counter < MAX_COUNTER)
+	else if (counter >= led_on && counter < max_counter)
 	{
 		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12 | GPIO_PIN_13, GPIO_PIN_RESET);
 		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_RESET);
 	}
-	else if (counter == MAX_COUNTER)
+	else if (counter == max_counter)
 	{
 		counter = 0;
 	}
