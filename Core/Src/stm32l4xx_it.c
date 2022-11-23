@@ -41,8 +41,8 @@
 #define MAX_BRIGHTNESS 100 //in percentage
 #define MIN_BRIGHTNESS 0 //in percentage
 #define STEP_IN_SET_BRIGHTNESS 10
-#define MAX_COLOR_LED 7
-#define MIN_COLOR_LED 0
+#define MIN_SELECT_LED 1
+#define MAX_SELECT_LED 3
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -191,13 +191,12 @@ void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
 	static uint16_t counter = 0;
-	static uint8_t color_led = MAX_COLOR_LED;
-	static uint8_t brightness_led = MIN_BRIGHTNESS;
+	static uint8_t current_select_led = MIN_SELECT_LED;
+	static uint8_t brightness_led[MAX_SELECT_LED] = {MIN_BRIGHTNESS};
 	static bool is_button_pressed = false;
 
 	float pwm_period = (float)1/PWM_FREQUENCY;
 	uint16_t max_counter = (uint16_t)(pwm_period/0.001);
-	uint16_t led_on = (uint16_t)(brightness_led * ((float)max_counter / 100));
   /* USER CODE END SysTick_IRQn 0 */
 	HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
@@ -208,98 +207,100 @@ void SysTick_Handler(void)
 		&& HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3) == GPIO_PIN_SET
 		&& HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_15) == GPIO_PIN_SET)
 	{
-			is_button_pressed = false;
+		is_button_pressed = false;
 	}
 
-	//change led by right button
+	//change led to set brightness by right button
 	if(is_button_pressed == false && HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_0) == GPIO_PIN_RESET)
 	{
-		if(color_led == MAX_COLOR_LED){
-			color_led = MIN_COLOR_LED;
+		if(current_select_led == MAX_SELECT_LED){
+			current_select_led = MIN_SELECT_LED;
 		}
 		else
 		{
-			color_led++;
+			current_select_led++;
 		}
 		is_button_pressed = true;
 	}
-	//change led by right button
+	//change led to set brightness by right button
 	if(is_button_pressed == false && HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_1) == GPIO_PIN_RESET)
 	{
-		if(color_led == MIN_COLOR_LED){
-			color_led = MAX_COLOR_LED;
+		if(current_select_led == MIN_SELECT_LED){
+			current_select_led = MAX_SELECT_LED;
 		}
 		else
 		{
-			color_led--;
+			current_select_led--;
 		}
 		is_button_pressed = true;
 	}
-	//increase brightness led by down button
+	//increase selected led brightness by down button
 	if(is_button_pressed == false && HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_2) == GPIO_PIN_RESET)
 	{
-		if(brightness_led < MAX_BRIGHTNESS){
-			brightness_led += STEP_IN_SET_BRIGHTNESS;
+		if(brightness_led[current_select_led - 1] < MAX_BRIGHTNESS){
+			brightness_led[current_select_led - 1] += STEP_IN_SET_BRIGHTNESS;
 		}
 		is_button_pressed = true;
 	}
-	//decrease brightness led by up button
+	//decrease selected led brightness up button
 	if(is_button_pressed == false && HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3) == GPIO_PIN_RESET)
 	{
-		if(brightness_led > MIN_BRIGHTNESS){
-			brightness_led -= STEP_IN_SET_BRIGHTNESS;
+		if(brightness_led[current_select_led - 1] > MIN_BRIGHTNESS){
+			brightness_led[current_select_led - 1] -= STEP_IN_SET_BRIGHTNESS;
 		}
 		is_button_pressed = true;
 	}
-	//set initial value by push button
+	//set max brightness of current selected led by push button
 	if(is_button_pressed == false && HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_15) == GPIO_PIN_RESET)
 	{
-		color_led = MAX_COLOR_LED;
-		brightness_led = MAX_BRIGHTNESS;
+		brightness_led[current_select_led - 1] = MAX_BRIGHTNESS;
 		is_button_pressed = true;
+	}
+
+	uint16_t led_on_period[MAX_SELECT_LED];
+	for (int i = 0; i < MAX_SELECT_LED; ++i)
+	{
+		led_on_period[i] = (uint16_t)(brightness_led[i] * ((float)max_counter / 100));
 	}
 
   	//PWM
-	if(counter < led_on)
-	{
-			//led 0
-			if((color_led & 1) == 1)
+	for (int i = 0; i < MAX_SELECT_LED; ++i)
+	{		
+		if(counter < led_on_period[i])
+		{
+			if(i == 0)
 			{
 				HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_SET);
 			}
-			else
-			{
-				HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_RESET);
-			}
-
-			//led 1
-			if((color_led & 2) == 2)
+			if(i == 1)
 			{
 				HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_SET);
 			}
-			else
-			{
-				HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_RESET);
-			}
-
-			//led 2
-			if((color_led & 4) == 4)
+			if(i == 2)
 			{
 				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);
 			}
-			else
+		}
+		else if (counter >= led_on_period[i] && counter < max_counter)
+		{
+			if(i == 0)
+			{
+				HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_RESET);
+			}
+			if(i == 1)
+			{
+				HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_RESET);
+			}
+			if(i == 2)
 			{
 				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_RESET);
 			}
-	}
-	else if (counter >= led_on && counter < max_counter)
-	{
-		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12 | GPIO_PIN_13, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_RESET);
-	}
-	else if (counter == max_counter)
-	{
-		counter = 0;
+		}
+		else
+		{
+			counter = 0;
+			break;
+		}
 	}
 
   	counter++;
