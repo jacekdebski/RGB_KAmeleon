@@ -250,10 +250,18 @@ void SysTick_Handler(void)
 		}
 		is_button_pressed = true;
 	}
-	//set max brightness of current selected led by push button
+	//switch between max and min brightness of current selected led by push button
 	if(is_button_pressed == false && HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_15) == GPIO_PIN_RESET)
 	{
-		brightness_led[current_select_led - 1] = MAX_BRIGHTNESS;
+		if(brightness_led[current_select_led - 1] == MAX_BRIGHTNESS)
+		{
+			brightness_led[current_select_led - 1] = MIN_BRIGHTNESS;
+		}
+		else
+		{
+			brightness_led[current_select_led - 1] = MAX_BRIGHTNESS;
+		}
+	
 		is_button_pressed = true;
 	}
 
