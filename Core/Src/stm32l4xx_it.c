@@ -222,7 +222,7 @@ void SysTick_Handler(void)
 		}
 		is_button_pressed = true;
 	}
-	//change led to set brightness by right button
+	//change led to set brightness by left button
 	if(is_button_pressed == false && HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_1) == GPIO_PIN_RESET)
 	{
 		if(current_select_led == MIN_SELECT_LED){
@@ -242,7 +242,7 @@ void SysTick_Handler(void)
 		}
 		is_button_pressed = true;
 	}
-	//decrease selected led brightness up button
+	//decrease selected led brightness by up button
 	if(is_button_pressed == false && HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3) == GPIO_PIN_RESET)
 	{
 		if(brightness_led[current_select_led - 1] > MIN_BRIGHTNESS){
